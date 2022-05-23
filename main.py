@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 LAT = 39.99149 #纬度
 LON = 116.30812 #经度
 ALT = 50 #海拔
-DAY = 7 #需要获取多少天以内的信息
+DAY = 3 #需要获取多少天以内的信息
 
 if __name__=="__main__":
 
@@ -87,57 +87,63 @@ if __name__=="__main__":
         {}
         ----------------------------
         '''.format(date_time.isoformat(sep=" ", timespec="milliseconds"), "国际空间站" if "ISS" in space_station_name else "中国空间站", type_str, content1, content2 )
+        if is_transit==0: #只预报凌
+            continue
         event_list.append({"space_station_name": space_station_name, "date_time": date_time, "is_sun":is_sun, "is_transit":is_transit, "content":content})
 
 
     today_str = "{}年{}月{}日".format(nowBJtime.year, nowBJtime.month, nowBJtime.day)
     title = "{} 未来一周空间站无可见凌日凌月".format(today_str)
+    flag = 0
     if sun_transit>0 and moon_transit>0:
         title = "{} 未来一周空间站凌日{}次，凌月{}次".format(today_str, sun_transit, moon_transit)
+        flag = 1 
     if sun_transit==0 and moon_transit>0:
         title = "{} 未来一周空间站凌月{}次".format(today_str, moon_transit)
+        flag = 1
     if moon_transit==0 and sun_transit>0:
         title = "{} 未来一周空间站凌日{}次".format(today_str, sun_transit)
+        flag = 1
+    if flag == 1:
+        mail_content = '''未来一周空间站凌日凌月预报
+        地点：北纬{}度，东经{}度
+        预报生成时间：{}
+        '''.format(LAT, LON, today_str)
+        mail_content += "".join([x["content"] for x in event_list])
+        mail_content += "本预报使用北大青年天文学会空间站凌日预报信息机器人自动生成。"
 
-    mail_content = '''未来一周空间站凌日凌月预报
-    地点：北纬{}度，东经{}度
-    预报生成时间：{}
-    '''.format(LAT, LON, today_str)
-    mail_content += "".join([x["content"] for x in event_list])
-    mail_content += "本预报使用北大青年天文学会空间站凌日预报信息机器人自动生成。"
 
+        parser = ArgumentParser()
+        parser.add_argument('--USERNAME', type=str)
+        parser.add_argument('--PASSWORD', type=str)
+        parser.add_argument('--RECEIVERS', type=str)
+        parser.add_argument('--HOST', type=str)
+        argconf = parser.parse_args()
+        mail_host = argconf.HOST
+        mail_username = argconf.USERNAME
+        mail_password = argconf.PASSWORD
+        sender = argconf.USERNAME
+        receivers = argconf.RECEIVERS.split(",")
 
-    parser = ArgumentParser()
-    parser.add_argument('--USERNAME', type=str)
-    parser.add_argument('--PASSWORD', type=str)
-    parser.add_argument('--RECEIVERS', type=str)
-    parser.add_argument('--HOST', type=str)
-    argconf = parser.parse_args()
-    mail_host = argconf.HOST
-    mail_username = argconf.USERNAME
-    mail_password = argconf.PASSWORD
-    sender = argconf.USERNAME
-    receivers = argconf.RECEIVERS.split(",")
+        message = MIMEText(mail_content,'plain','utf-8')
+        message['Subject'] = title
+        message['From'] = sender
+        message['To'] = receivers[0]
 
-    message = MIMEText(mail_content,'plain','utf-8')
-    message['Subject'] = title
-    message['From'] = sender
-    message['To'] = receivers[0]
-
-    try:
-        smtpObj = smtplib.SMTP() 
-        #连接到服务器
-        smtpObj.connect(mail_host,25)
-        #登录到服务器
-        smtpObj.login(mail_username,mail_password) 
-        #发送
-        smtpObj.sendmail(
-            sender,receivers,message.as_string()) 
-        #退出
-        smtpObj.quit() 
-        print('success')
-    except smtplib.SMTPException as e:
-        print('error',e) #打印错误
+        try:
+            smtpObj = smtplib.SMTP() 
+            #连接到服务器
+            smtpObj.connect(mail_host,25)
+            #登录到服务器
+            smtpObj.login(mail_username,mail_password) 
+            #发送
+            smtpObj.sendmail(
+                sender,receivers,message.as_string()) 
+            #退出
+            smtpObj.quit() 
+            print('success')
+        except smtplib.SMTPException as e:
+            print('error',e) #打印错误
 
 
 
