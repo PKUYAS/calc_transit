@@ -24,7 +24,7 @@ if __name__=="__main__":
 
 
 
-    form_lat = driver.find_element("id,"form_lat")
+    form_lat = driver.find_element("id","form_lat")
     form_lon = driver.find_element("id","form_lon")
     form_elev = driver.find_element("id","form_elev")
     form_lat.send_keys(LAT)
