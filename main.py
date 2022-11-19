@@ -90,7 +90,7 @@ if __name__=="__main__":
         if is_transit==0: #只预报凌
             continue
         event_list.append({"space_station_name": space_station_name, "date_time": date_time, "is_sun":is_sun, "is_transit":is_transit, "content":content})
-
+    print(event_list)
 
     today_str = "{}年{}月{}日".format(nowBJtime.year, nowBJtime.month, nowBJtime.day)
     title = "{} 未来一周空间站无可见凌日凌月".format(today_str)
